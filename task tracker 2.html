@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Task Tracker</title>
+	
+	<style>
+		:root {
+			--bg: #f7f9fc;
+			--panel: #ffffff;
+			--panel-2: #fbfcff;
+			--text: #1f2937;
+			--muted: #6b7280;
+			--accent: #7c83fd;
+			--accent-2: #6ee7b7;
+			--danger: #ef4444;
+			--warning: #f59e0b;
+			--border: #e5e7eb;
+			--shadow: 0 6px 20px rgba(31,41,55,0.08);
+			--radius: 14px;
+			--radius-sm: 10px;
+		}
+
+		* { box-sizing: border-box; }
+		html, body { height: 100%; }
+		body {
+			margin: 0;
+			font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+			color: var(--text);
+			background:
+				radial-gradient(900px 500px at -10% -10%, #e9f2ff 0%, transparent 60%),
+				radial-gradient(900px 500px at 110% 10%, #fbefff 0%, transparent 60%),
+				var(--bg);
+		}
+
+		.container {
+			max-width: 1140px;
+			margin: 28px auto 60px;
+			padding: 0 20px;
+		}
+
+		header {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: space-between;
+			gap: 16px;
+			margin-bottom: 16px;
+		}
+
+		.title { display: flex; align-items: center; gap: 12px; }
+		.logo {
+			width: 40px; height: 40px; border-radius: 10px;
+			background: linear-gradient(135deg, #a5b4fc, #fbcfe8);
+			display: grid; place-items: center; color: #18212f; font-weight: 900;
+			box-shadow: var(--shadow);
+		}
+		h1 { margin: 0; font-size: 22px; }
+		.subtitle { color: var(--muted); font-size: 13px; }
+
+		.panel {
+			background: linear-gradient(180deg, var(--panel), var(--panel-2));
+			border: 1px solid var(--border);
+			border-radius: var(--radius);
+			box-shadow: var(--shadow);
+		}
+
+		.toolbar {
+			display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px;
+		}
+		@media (min-width: 860px) {
+			.toolbar { grid-template-columns: 1.2fr 0.8fr 0.6fr 0.6fr auto; align-items: center; }
+		}
+
+		.toolbar input[type="search"], .toolbar select {
+			width: 100%; padding: 10px 12px; border-radius: var(--radius-sm);
+			border: 1px solid var(--border); background: #ffffff; color: var(--text);
+		}
+
+		.btn {
+			padding: 10px 14px; border-radius: var(--radius-sm);
+			border: 1px solid var(--border); background: #ffffff; color: var(--text);
+			cursor: pointer;
+		}
+		.btn:hover { border-color: #cbd5e1; }
+		.btn-primary { background: linear-gradient(180deg, #c7d2fe, #e9d5ff); border-color: #c4b5fd; }
+		.btn-danger { background: linear-gradient(180deg, #fecaca, #ffe4e6); border-color: #fecaca; }
+
+		.layout { display: grid; grid-template-columns: 1fr; gap: 16px; }
+		@media (min-width: 1024px) { .layout { grid-template-columns: 0.9fr 1.1fr; } }
+
+		.card { padding: 16px; }
+		.form-row { display: grid; grid-template-columns: 1fr; gap: 12px; }
+		@media (min-width: 720px) { .form-row.two { grid-template-columns: 1fr 1fr; } }
+		label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+		input[type="text"], input[type="date"], textarea, select {
+			width: 100%; padding: 10px 12px; border-radius: var(--radius-sm);
+			border: 1px solid var(--border); background: #ffffff; color: var(--text);
+		}
+		textarea { min-height: 80px; resize: vertical; }
+		.actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+
+		.list { padding: 0; margin: 0; list-style: none; }
+		.item {
+			display: grid; grid-template-columns: auto 1fr auto; align-items: start; gap: 14px;
+			padding: 14px; border-top: 1px solid var(--border);
+		}
+		.item:first-child { border-top: none; }
+
+		.checkbox { margin-top: 4px; width: 20px; height: 20px; }
+
+		.title-line { display: flex; align-items: center; gap: 10px; }
+		.title-line h3 { margin: 0; font-size: 16px; }
+		.title-line .pill {
+			font-size: 11px; padding: 4px 8px; border-radius: 999px;
+			border: 1px solid var(--border); background: #f8fafc; color: var(--muted);
+		}
+		.meta { color: var(--muted); font-size: 12px; margin-top: 6px; display: flex; gap: 12px; flex-wrap: wrap; }
+		.desc { margin-top: 8px; color: #334155; font-size: 13px; }
+
+		.row-actions { display: flex; gap: 8px; }
+		.icon-btn { background: #ffffff; border: 1px solid var(--border); color: var(--muted); padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+		.icon-btn:hover { color: var(--text); border-color: #cbd5e1; }
+
+		.empty { text-align: center; padding: 28px; color: var(--muted); }
+		.footer { margin-top: 14px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12px; }
+		.counter strong { color: var(--text); }
+
+		.pill.priority-high { color: #9f1239; border-color: #fecdd3; background: #ffe4e6; }
+		.pill.priority-medium { color: #92400e; border-color: #fde68a; background: #fef3c7; }
+		.pill.priority-low { color: #065f46; border-color: #bbf7d0; background: #ecfdf5; }
+		.pill.overdue { color: #9f1239; border-color: #fecdd3; background: #ffe4e6; }
+
+		.strike { text-decoration: line-through; color: var(--muted); }
+
+		/* Calendar */
+		.cal { padding: 12px; }
+		.cal-header {
+			display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px;
+		}
+		.cal-title { margin: 0; font-size: 16px; font-weight: 600; }
+		.cal-nav { display: flex; gap: 8px; align-items: center; }
+		.cal-grid {
+			display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; padding-top: 8px;
+		}
+		.cal-weekday {
+			text-align: center; font-size: 12px; color: var(--muted);
+		}
+		.cal-day {
+			border: 1px solid var(--border); border-radius: 10px; background: #ffffff;
+			min-height: 84px; padding: 8px; display: flex; flex-direction: column; gap: 6px;
+			cursor: pointer;
+		}
+		.cal-day:hover { border-color: #cbd5e1; }
+		.cal-day.out { opacity: 0.45; }
+		.cal-day .date {
+			width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-size: 12px; color: #111827;
+			background: #f3f4f6; border: 1px solid #e5e7eb;
+		}
+		.cal-day.today .date {
+			background: #e0e7ff; border-color: #c7d2fe; color: #1e293b;
+		}
+		.cal-day.selected { outline: 2px solid #c7d2fe; outline-offset: 2px; }
+		.cal-badges { display: flex; flex-wrap: wrap; gap: 4px; }
+		.badge {
+			font-size: 10px; padding: 3px 6px; border-radius: 999px; border: 1px solid var(--border); background: #f8fafc; color: #334155; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+		}
+		.dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; margin-right: 6px; }
+		.dot.high { background: #ef4444; }
+		.dot.medium { background: #f59e0b; }
+		.dot.low { background: #10b981; }
+		.cal-legend { display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 12px; }
+	</style>
+</head>
+<body>
+	<div class="container">
+		<header>
+			<div class="title">
+				<div class="logo" aria-hidden="true">TT</div>
+				<div>
+					<h1>Task Tracker</h1>
+					<div class="subtitle">Pastel theme + Calendar. Data saved on your device.</div>
+				</div>
+			</div>
+			<div class="row-actions">
+				<button class="btn" id="exportBtn" title="Download your tasks as a JSON file">Export</button>
+				<label for="importInput" class="btn" style="cursor:pointer">Import<input id="importInput" type="file" accept="application/json" style="display:none" /></label>
+				<button class="btn btn-danger" id="clearAllBtn" title="Delete all tasks">Clear All</button>
+			</div>
+		</header>
+
+		<section class="panel toolbar" aria-label="Filters and sorting">
+			<input id="searchInput" type="search" placeholder="Search tasks..." aria-label="Search tasks" />
+			<select id="statusFilter" aria-label="Filter by status">
+				<option value="all">All</option>
+				<option value="active">Active</option>
+				<option value="completed">Completed</option>
+				<option value="overdue">Overdue</option>
+			</select>
+			<select id="priorityFilter" aria-label="Filter by priority">
+				<option value="all">All priorities</option>
+				<option value="high">High</option>
+				<option value="medium">Medium</option>
+				<option value="low">Low</option>
+			</select>
+			<select id="sortBy" aria-label="Sort by">
+				<option value="createdAt-desc">Newest</option>
+				<option value="createdAt-asc">Oldest</option>
+				<option value="dueDate-asc">Due date ↑</option>
+				<option value="dueDate-desc">Due date ↓</option>
+				<option value="priority-desc">Priority High→Low</option>
+				<option value="priority-asc">Priority Low→High</option>
+			</select>
+			<button class="btn" id="resetFiltersBtn">Reset</button>
+		</section>
+
+		<div class="layout">
+			<section class="panel card" aria-label="Add or edit task">
+				<form id="taskForm">
+					<input type="hidden" id="taskId" />
+					<div class="form-row">
+						<div>
+							<label for="title">Title</label>
+							<input id="title" type="text" placeholder="e.g. Buy groceries" required />
+						</div>
+					</div>
+					<div class="form-row">
+						<div>
+							<label for="description">Details</label>
+							<textarea id="description" placeholder="Optional notes"></textarea>
+						</div>
+					</div>
+					<div class="form-row two">
+						<div>
+							<label for="dueDate">Due date</label>
+							<input id="dueDate" type="date" />
+						</div>
+						<div>
+							<label for="priority">Priority</label>
+							<select id="priority">
+								<option value="medium">Medium</option>
+								<option value="high">High</option>
+								<option value="low">Low</option>
+							</select>
+						</div>
+					</div>
+					<div class="actions">
+						<button type="submit" class="btn btn-primary" id="saveBtn">Add Task</button>
+						<button type="button" class="btn" id="cancelEditBtn" hidden>Cancel Edit</button>
+					</div>
+				</form>
+			</section>
+
+			<div>
+				<section class="panel card cal" aria-label="Calendar">
+					<div class="cal-header">
+						<div class="cal-nav">
+							<button class="btn" id="prevMonthBtn" title="Previous month">←</button>
+							<button class="btn" id="nextMonthBtn" title="Next month">→</button>
+						</div>
+						<h2 class="cal-title" id="calTitle">Month YYYY</h2>
+						<div class="cal-nav">
+							<button class="btn" id="clearDateFilterBtn" title="Clear date filter" style="display:none">Clear date filter</button>
+						</div>
+					</div>
+					<div class="cal-legend">
+						<span><span class="dot high"></span>High</span>
+						<span><span class="dot medium"></span>Medium</span>
+						<span><span class="dot low"></span>Low</span>
+					</div>
+					<div class="cal-grid" id="calGrid"></div>
+				</section>
+
+				<section class="panel" aria-label="Task list">
+					<ul id="taskList" class="list" aria-live="polite"></ul>
+					<div class="footer">
+						<div class="counter"><strong id="activeCount">0</strong> active • <span id="completedCount">0</span> completed</div>
+						<button class="btn" id="clearCompletedBtn">Clear Completed</button>
+					</div>
+				</section>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		const storageKey = 'task-tracker.v1.tasks';
+
+		function generateId() {
+			const randomSuffix = Math.random().toString(36).slice(2, 8);
+			return `task_${Date.now()}_${randomSuffix}`;
+		}
+
+		function readTasksFromStorage() {
+			try {
+				const raw = localStorage.getItem(storageKey);
+				if (!raw) return [];
+				const parsed = JSON.parse(raw);
+				return Array.isArray(parsed) ? parsed : [];
+			} catch { return []; }
+		}
+		function writeTasksToStorage(tasks) {
+			try { localStorage.setItem(storageKey, JSON.stringify(tasks)); } catch {}
+		}
+
+		function getPriorityRank(priority) {
+			switch (priority) {
+				case 'high': return 3;
+				case 'medium': return 2;
+				case 'low': return 1;
+				default: return 0;
+			}
+		}
+		function isOverdue(task) {
+			if (!task.dueDate || task.completed) return false;
+			const endOfToday = new Date(); endOfToday.setHours(23,59,59,999);
+			const due = new Date(task.dueDate + 'T23:59:59');
+			return due.getTime() < endOfToday.getTime();
+		}
+
+		// DOM refs
+		const taskListEl = document.getElementById('taskList');
+		const searchInputEl = document.getElementById('searchInput');
+		const statusFilterEl = document.getElementById('statusFilter');
+		const priorityFilterEl = document.getElementById('priorityFilter');
+		const sortByEl = document.getElementById('sortBy');
+		const resetFiltersBtnEl = document.getElementById('resetFiltersBtn');
+		const exportBtnEl = document.getElementById('exportBtn');
+		const importInputEl = document.getElementById('importInput');
+		const clearAllBtnEl = document.getElementById('clearAllBtn');
+		const clearCompletedBtnEl = document.getElementById('clearCompletedBtn');
+		const activeCountEl = document.getElementById('activeCount');
+		const completedCountEl = document.getElementById('completedCount');
+
+		const formEl = document.getElementById('taskForm');
+		const taskIdEl = document.getElementById('taskId');
+		const titleEl = document.getElementById('title');
+		const descriptionEl = document.getElementById('description');
+		const dueDateEl = document.getElementById('dueDate');
+		const priorityEl = document.getElementById('priority');
+		const saveBtnEl = document.getElementById('saveBtn');
+		const cancelEditBtnEl = document.getElementById('cancelEditBtn');
+
+		// Calendar refs
+		const calTitleEl = document.getElementById('calTitle');
+		const calGridEl = document.getElementById('calGrid');
+		const prevMonthBtnEl = document.getElementById('prevMonthBtn');
+		const nextMonthBtnEl = document.getElementById('nextMonthBtn');
+		const clearDateFilterBtnEl = document.getElementById('clearDateFilterBtn');
+
+		// State
+		let allTasks = readTasksFromStorage();
+		let calendarYear, calendarMonth; // displayed year/month
+		let calendarSelectedDate = null; // 'yyyy-mm-dd' or null
+
+		function initCalendarState() {
+			const now = new Date();
+			calendarYear = now.getFullYear();
+			calendarMonth = now.getMonth(); // 0-11
+		}
+		function formatYMD(d) {
+			const y = d.getFullYear();
+			const m = String(d.getMonth() + 1).padStart(2, '0');
+			const day = String(d.getDate()).padStart(2, '0');
+			return `${y}-${m}-${day}`;
+		}
+		function monthLabel(year, month) {
+			const d = new Date(year, month, 1);
+			return d.toLocaleString(undefined, { month: 'long', year: 'numeric' });
+		}
+		function buildMonthGrid(year, month) {
+			const first = new Date(year, month, 1);
+			const firstWeekday = first.getDay(); // 0 Sun .. 6 Sat
+			const daysInMonth = new Date(year, month + 1, 0).getDate();
+			const prevMonthDays = new Date(year, month, 0).getDate();
+
+			const cells = [];
+			// Weekday headers
+			const weekdayNames = Array.from({ length: 7 }, (_, i) =>
+				new Date(1970, 0, 4 + i).toLocaleString(undefined, { weekday: 'short' })
+			);
+			for (const name of weekdayNames) {
+				const div = document.createElement('div');
+				div.className = 'cal-weekday';
+				div.textContent = name;
+				cells.push(div);
+			}
+
+			// Leading days (previous month)
+			for (let i = 0; i < firstWeekday; i++) {
+				const d = prevMonthDays - firstWeekday + 1 + i;
+				const cell = createDayCell(year, month - 1, d, true);
+				cells.push(cell);
+			}
+			// Current month days
+			for (let d = 1; d <= daysInMonth; d++) {
+				const cell = createDayCell(year, month, d, false);
+				cells.push(cell);
+			}
+			// Trailing days to complete rows (up to 6 weeks view)
+			while (cells.length % 7 !== 0) {
+				const d = cells.length % 7;
+				const dayNum = (cells.length - (weekdayNames.length + firstWeekday) - daysInMonth) + 1;
+				const cell = createDayCell(year, month + 1, dayNum, true);
+				cells.push(cell);
+			}
+			return cells;
+		}
+		function createDayCell(year, month, day, isOutside) {
+			const dateObj = new Date(year, month, day);
+			const ymd = formatYMD(dateObj);
+			const cell = document.createElement('div');
+			cell.className = 'cal-day' + (isOutside ? ' out' : '');
+			const todayYMD = formatYMD(new Date());
+			if (ymd === todayYMD && !isOutside) cell.classList.add('today');
+			if (calendarSelectedDate === ymd) cell.classList.add('selected');
+
+			const dateBadge = document.createElement('div');
+			dateBadge.className = 'date';
+			dateBadge.textContent = String(dateObj.getDate());
+			cell.appendChild(dateBadge);
+
+			const badges = document.createElement('div');
+			badges.className = 'cal-badges';
+
+			// Show tasks due this date (max 3)
+			const tasksForDay = allTasks.filter(t => t.dueDate === ymd);
+			for (const t of tasksForDay.slice(0, 3)) {
+				const b = document.createElement('div');
+				b.className = 'badge';
+				const dot = document.createElement('span');
+				dot.className = 'dot ' + t.priority;
+				b.appendChild(dot);
+				b.appendChild(document.createTextNode(t.title));
+				badges.appendChild(b);
+			}
+			if (tasksForDay.length > 3) {
+				const more = document.createElement('div');
+				more.className = 'badge';
+				more.textContent = `+${tasksForDay.length - 3} more`;
+				badges.appendChild(more);
+			}
+			cell.appendChild(badges);
+
+			// Click to filter by date (only if inside current month view)
+			cell.addEventListener('click', () => {
+				if (isOutside) {
+					// jump to clicked month
+					calendarYear = dateObj.getFullYear();
+					calendarMonth = dateObj.getMonth();
+				}
+				calendarSelectedDate = ymd;
+				render();
+			});
+
+			return cell;
+		}
+		function renderCalendar() {
+			calTitleEl.textContent = monthLabel(calendarYear, calendarMonth);
+			calGridEl.innerHTML = '';
+			const cells = buildMonthGrid(calendarYear, calendarMonth);
+			for (const el of cells) calGridEl.appendChild(el);
+			clearDateFilterBtnEl.style.display = calendarSelectedDate ? '' : 'none';
+		}
+
+		function getFilters() {
+			return {
+				query: searchInputEl.value.trim().toLowerCase(),
+				status: statusFilterEl.value,
+				priority: priorityFilterEl.value,
+				sort: sortByEl.value,
+				selectedDate: calendarSelectedDate
+			};
+		}
+		function applyFilters(tasks, filters) {
+			const filtered = tasks.filter(task => {
+				if (filters.selectedDate && task.dueDate !== filters.selectedDate) return false;
+				if (filters.status === 'active' && task.completed) return false;
+				if (filters.status === 'completed' && !task.completed) return false;
+				if (filters.status === 'overdue' && !isOverdue(task)) return false;
+				if (filters.priority !== 'all' && task.priority !== filters.priority) return false;
+				if (filters.query) {
+					const hay = `${task.title} ${task.description || ''}`.toLowerCase();
+					if (!hay.includes(filters.query)) return false;
+				}
+				return true;
+			});
+
+			const [sortKey, sortDir] = filters.sort.split('-');
+			const dir = sortDir === 'asc' ? 1 : -1;
+			filtered.sort((a, b) => {
+				if (sortKey === 'createdAt') return (a.createdAt - b.createdAt) * dir;
+				if (sortKey === 'dueDate') {
+					const aVal = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+					const bVal = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+					return (aVal - bVal) * dir;
+				}
+				if (sortKey === 'priority') return (getPriorityRank(a.priority) - getPriorityRank(b.priority)) * dir;
+				return 0;
+			});
+			return filtered;
+		}
+		function updateCounters(tasks) {
+			const active = tasks.filter(t => !t.completed).length;
+			const completed = tasks.filter(t => t.completed).length;
+			activeCountEl.textContent = String(active);
+			completedCountEl.textContent = String(completed);
+		}
+
+		function createTaskRow(task) {
+			const li = document.createElement('li');
+			li.className = 'item';
+			li.dataset.taskId = task.id;
+
+			const checkbox = document.createElement('input');
+			checkbox.type = 'checkbox';
+			checkbox.className = 'checkbox';
+			checkbox.checked = task.completed;
+			checkbox.addEventListener('change', () => toggleCompleted(task.id, checkbox.checked));
+
+			const content = document.createElement('div');
+
+			const titleLine = document.createElement('div');
+			titleLine.className = 'title-line';
+			const h3 = document.createElement('h3');
+			h3.textContent = task.title;
+			if (task.completed) h3.classList.add('strike');
+			titleLine.appendChild(h3);
+
+			const pr = document.createElement('span');
+			pr.className = `pill priority-${task.priority}`;
+			pr.textContent = `Priority: ${task.priority}`;
+			titleLine.appendChild(pr);
+
+			if (isOverdue(task)) {
+				const od = document.createElement('span');
+				od.className = 'pill overdue';
+				od.textContent = 'Overdue';
+				titleLine.appendChild(od);
+			}
+
+			const meta = document.createElement('div');
+			meta.className = 'meta';
+			const createdDate = new Date(task.createdAt);
+			meta.appendChild(document.createTextNode(`Created ${createdDate.toLocaleDateString()}`));
+			if (task.dueDate) meta.appendChild(document.createTextNode(`Due ${new Date(task.dueDate).toLocaleDateString()}`));
+			if (task.completed && task.completedAt) meta.appendChild(document.createTextNode(`Completed ${new Date(task.completedAt).toLocaleDateString()}`));
+
+			content.appendChild(titleLine);
+			content.appendChild(meta);
+
+			if (task.description) {
+				const desc = document.createElement('div');
+				desc.className = 'desc';
+				desc.textContent = task.description;
+				content.appendChild(desc);
+			}
+
+			const rowActions = document.createElement('div');
+			rowActions.className = 'row-actions';
+			const editBtn = document.createElement('button');
+			editBtn.className = 'icon-btn';
+			editBtn.textContent = 'Edit';
+			editBtn.addEventListener('click', () => startEditTask(task));
+			const delBtn = document.createElement('button');
+			delBtn.className = 'icon-btn';
+			delBtn.textContent = 'Delete';
+			delBtn.addEventListener('click', () => { if (confirm('Delete this task?')) deleteTask(task.id); });
+			rowActions.appendChild(editBtn);
+			rowActions.appendChild(delBtn);
+
+			li.appendChild(checkbox);
+			li.appendChild(content);
+			li.appendChild(rowActions);
+			return li;
+		}
+
+		function upsertTask(taskInput) {
+			const index = allTasks.findIndex(t => t.id === taskInput.id);
+			if (index === -1) allTasks.push(taskInput);
+			else allTasks[index] = taskInput;
+			writeTasksToStorage(allTasks);
+			render();
+		}
+		function deleteTask(taskId) {
+			allTasks = allTasks.filter(t => t.id !== taskId);
+			writeTasksToStorage(allTasks);
+			render();
+		}
+		function toggleCompleted(taskId, completed) {
+			const index = allTasks.findIndex(t => t.id === taskId);
+			if (index === -1) return;
+			allTasks[index] = { ...allTasks[index], completed, completedAt: completed ? Date.now() : null };
+			writeTasksToStorage(allTasks);
+			render();
+		}
+		function clearCompletedTasks() {
+			allTasks = allTasks.filter(t => !t.completed);
+			writeTasksToStorage(allTasks);
+			render();
+		}
+		function clearAllTasks() {
+			if (!confirm('Delete all tasks? This cannot be undone.')) return;
+			allTasks = [];
+			writeTasksToStorage(allTasks);
+			render();
+		}
+		function startEditTask(task) {
+			taskIdEl.value = task.id;
+			titleEl.value = task.title;
+			descriptionEl.value = task.description || '';
+			dueDateEl.value = task.dueDate || '';
+			priorityEl.value = task.priority || 'medium';
+			saveBtnEl.textContent = 'Save Changes';
+			cancelEditBtnEl.hidden = false;
+			titleEl.focus();
+		}
+		function cancelEdit() {
+			taskIdEl.value = '';
+			formEl.reset();
+			priorityEl.value = 'medium';
+			saveBtnEl.textContent = 'Add Task';
+			cancelEditBtnEl.hidden = true;
+		}
+
+		function exportTasks() {
+			const blob = new Blob([JSON.stringify(allTasks, null, 2)], { type: 'application/json' });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			const date = new Date().toISOString().slice(0,10);
+			a.href = url; a.download = `tasks-${date}.json`; a.click();
+			URL.revokeObjectURL(url);
+		}
+		function importTasksFromFile(file) {
+			const reader = new FileReader();
+			reader.onload = () => {
+				try {
+					const data = JSON.parse(String(reader.result));
+					if (!Array.isArray(data)) throw new Error('Invalid data');
+					const normalized = data.map(raw => ({
+						id: raw.id || generateId(),
+						title: String(raw.title || '').slice(0, 200),
+						description: String(raw.description || ''),
+						createdAt: Number(raw.createdAt) || Date.now(),
+						dueDate: raw.dueDate ? String(raw.dueDate) : null,
+						priority: ['high','medium','low'].includes(raw.priority) ? raw.priority : 'medium',
+						completed: Boolean(raw.completed),
+						completedAt: raw.completed ? (Number(raw.completedAt) || Date.now()) : null,
+					}));
+					allTasks = normalized;
+					writeTasksToStorage(allTasks);
+					render();
+					alert('Tasks imported successfully.');
+				} catch { alert('Could not import file. Make sure it is a valid tasks JSON export.'); }
+			};
+			reader.readAsText(file);
+		}
+
+		function render() {
+			// Calendar first (uses allTasks)
+			renderCalendar();
+
+			// List (uses filters)
+			const filters = getFilters();
+			const listToShow = applyFilters(allTasks, filters);
+			taskListEl.innerHTML = '';
+			if (listToShow.length === 0) {
+				const empty = document.createElement('div');
+				empty.className = 'empty';
+				empty.textContent = 'No tasks match. Add a new one or reset filters.';
+				taskListEl.appendChild(empty);
+			} else {
+				for (const t of listToShow) taskListEl.appendChild(createTaskRow(t));
+			}
+			updateCounters(allTasks);
+		}
+
+		// Events
+		formEl.addEventListener('submit', (e) => {
+			e.preventDefault();
+			const title = titleEl.value.trim();
+			if (!title) { titleEl.focus(); return; }
+			const taskBase = {
+				title,
+				description: descriptionEl.value.trim(),
+				dueDate: dueDateEl.value ? dueDateEl.value : null,
+				priority: priorityEl.value,
+			};
+			const existingId = taskIdEl.value;
+			if (existingId) {
+				const existing = allTasks.find(t => t.id === existingId);
+				if (!existing) { cancelEdit(); return; }
+				upsertTask({ ...existing, ...taskBase });
+			} else {
+				upsertTask({
+					id: generateId(),
+					...taskBase,
+					createdAt: Date.now(),
+					completed: false,
+					completedAt: null,
+				});
+			}
+			// If a date is selected in calendar and user added new task with empty due date, prefill to selected
+			if (!dueDateEl.value && calendarSelectedDate) {
+				dueDateEl.value = calendarSelectedDate;
+			}
+			cancelEdit();
+		});
+
+		cancelEditBtnEl.addEventListener('click', cancelEdit);
+
+		searchInputEl.addEventListener('input', render);
+		statusFilterEl.addEventListener('change', render);
+		priorityFilterEl.addEventListener('change', render);
+		sortByEl.addEventListener('change', render);
+		resetFiltersBtnEl.addEventListener('click', () => {
+			searchInputEl.value = '';
+			statusFilterEl.value = 'all';
+			priorityFilterEl.value = 'all';
+			sortByEl.value = 'createdAt-desc';
+			calendarSelectedDate = null;
+			render();
+		});
+
+		exportBtnEl.addEventListener('click', exportTasks);
+		importInputEl.addEventListener('change', () => {
+			const file = importInputEl.files && importInputEl.files[0];
+			if (file) importTasksFromFile(file);
+			importInputEl.value = '';
+		});
+		clearAllBtnEl.addEventListener('click', clearAllTasks);
+		clearCompletedBtnEl.addEventListener('click', () => {
+			if (!allTasks.some(t => t.completed)) { alert('No completed tasks to clear.'); return; }
+			if (confirm('Delete all completed tasks?')) clearCompletedTasks();
+		});
+
+		prevMonthBtnEl.addEventListener('click', () => {
+			if (calendarMonth === 0) { calendarMonth = 11; calendarYear--; } else { calendarMonth--; }
+			renderCalendar();
+		});
+		nextMonthBtnEl.addEventListener('click', () => {
+			if (calendarMonth === 11) { calendarMonth = 0; calendarYear++; } else { calendarMonth++; }
+			renderCalendar();
+		});
+		clearDateFilterBtnEl.addEventListener('click', () => {
+			calendarSelectedDate = null;
+			render();
+		});
+
+		// Init + first render
+		initCalendarState();
+		render();
+	</script>
+</body>
+</html>
